@@ -114,7 +114,7 @@ export default function Step1Page() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full h-11 text-base">
+              <Button type="submit" className="w-full h-12 text-base">
                 Continue
               </Button>
             </form>

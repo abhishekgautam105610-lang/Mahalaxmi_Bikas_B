@@ -170,17 +170,17 @@ export default function Step2Page() {
                 )}
               </div>
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-2 gap-4 pt-2 pb-[env(safe-area-inset-bottom)]">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => router.push("/")}
-                  className="flex-1"
+                  className="h-12 w-full text-base"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back
                 </Button>
-                <Button type="submit" className="flex-1" disabled={loading}>
+                <Button type="submit" className="h-12 w-full text-base" disabled={loading}>
                   {loading ? "Submitting..." : "Submit"}
                 </Button>
               </div>
