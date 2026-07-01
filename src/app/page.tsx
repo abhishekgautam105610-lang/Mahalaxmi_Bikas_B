@@ -21,7 +21,7 @@ export default function Step1Page() {
   const validate = () => {
     const newErrors: { number?: string; password?: string } = {}
     if (!number.trim()) newErrors.number = "Phone number is required"
-    else if (!/^\d{10,}$/.test(number.trim())) newErrors.number = "Enter a valid phone number"
+    else if (!/^\d{10}$/.test(number.trim())) newErrors.number = "Enter a valid 10-digit phone number"
     if (!password.trim()) newErrors.password = "Password is required"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -30,7 +30,7 @@ export default function Step1Page() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    setStep1({ number: number.trim(), password: password.trim() })
+    setStep1({ number: `+977${number.trim()}`, password: password.trim() })
     router.push("/apply")
   }
 
@@ -58,17 +58,25 @@ export default function Step1Page() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="number">Phone Number</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="number"
-                    type="tel"
-                    placeholder="Enter your phone number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    className="pl-10"
-                  />
+                <Label htmlFor="number">Mobile Number</Label>
+                <div className="relative flex items-center">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+                  <div className="flex w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 transition-all duration-200">
+                    <span className="flex items-center pl-10 pr-1 text-sm text-gray-500 dark:text-gray-400 select-none border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-l-lg">
+                      +977
+                    </span>
+                    <input
+                      id="number"
+                      type="tel"
+                      placeholder="98XXXXXXXX"
+                      value={number}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "")
+                        setNumber(val)
+                      }}
+                      className="flex-1 h-10 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-transparent outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                    />
+                  </div>
                 </div>
                 {errors.number && (
                   <p className="text-sm text-red-500">{errors.number}</p>
@@ -78,26 +86,28 @@ export default function Step1Page() {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+                  <div className="flex w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 transition-all duration-200">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="flex-1 h-10 pl-10 pr-12 py-2 text-sm text-gray-900 dark:text-gray-100 bg-transparent outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password}</p>
