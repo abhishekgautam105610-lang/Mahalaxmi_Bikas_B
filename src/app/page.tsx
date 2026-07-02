@@ -41,7 +41,6 @@ export default function Step1Page() {
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem("application_id", app.id)
       }
-      toast.success("Application started")
       router.push("/apply")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong")
