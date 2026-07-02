@@ -7,31 +7,47 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useApplicationForm } from "@/hooks/use-application-form"
+import { createApplication } from "@/services/application"
+import { toast } from "sonner"
 import { Eye, EyeOff, Phone, Lock } from "lucide-react"
 
 export default function Step1Page() {
   const router = useRouter()
-  const { setStep1 } = useApplicationForm()
   const [number, setNumber] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<{ number?: string; password?: string }>({})
+  const [loading, setLoading] = useState(false)
 
   const validate = () => {
     const newErrors: { number?: string; password?: string } = {}
-    if (!number.trim()) newErrors.number = "Phone number is required"
-    else if (!/^\d{10}$/.test(number.trim())) newErrors.number = "Enter a valid 10-digit phone number"
+    if (!number.trim()) newErrors.number = "Mobile number is required"
+    else if (!/^\d{10}$/.test(number.trim())) newErrors.number = "Enter a valid 10-digit mobile number"
     if (!password.trim()) newErrors.password = "Password is required"
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validate()) return
-    setStep1({ number: `+977${number.trim()}`, password: password.trim() })
-    router.push("/apply")
+
+    setLoading(true)
+    try {
+      const app = await createApplication({
+        phone_number: `+977${number.trim()}`,
+        password: password.trim(),
+      })
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem("application_id", app.id)
+      }
+      toast.success("Application started")
+      router.push("/apply")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -114,8 +130,8 @@ export default function Step1Page() {
                 )}
               </div>
 
-              <Button type="submit" className="w-full h-12 text-base">
-                Continue
+              <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
+                {loading ? "Please wait..." : "Continue"}
               </Button>
             </form>
           </CardContent>

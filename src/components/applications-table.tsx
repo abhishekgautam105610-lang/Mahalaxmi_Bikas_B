@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
 import type { ApplicationWithOtpCount } from "@/types"
 import {
-  ChevronUp, ChevronDown, ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight,
   Trash2, ExternalLink, Phone, User, Fingerprint, Clock
 } from "lucide-react"
 import { deleteApplication } from "@/services/application"
@@ -30,35 +30,20 @@ interface Props {
   totalPages: number
 }
 
-function SortHeader({
-  column,
-  sortBy,
-  sortOrder,
-  onSort,
-  children,
-}: {
-  column: string
-  sortBy: string
-  sortOrder: string
-  onSort: (column: string) => void
-  children: React.ReactNode
-}) {
+function StatusBadge({ status }: { status: string }) {
+  const variant = status === "Completed" ? "success" as const
+    : status === "OTP Verification" ? "warning" as const
+    : status === "In Progress" ? "default" as const
+    : "secondary" as const
+
+  return <Badge variant={variant} className="text-xs">{status}</Badge>
+}
+
+function StepBadge({ step }: { step: string }) {
   return (
-    <TableHead>
-      <button
-        className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-        onClick={() => onSort(column)}
-      >
-        {children}
-        {sortBy === column ? (
-          sortOrder === "asc" ? (
-            <ChevronUp className="h-3 w-3" />
-          ) : (
-            <ChevronDown className="h-3 w-3" />
-          )
-        ) : null}
-      </button>
-    </TableHead>
+    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+      {step}
+    </span>
   )
 }
 
@@ -72,35 +57,38 @@ function MobileCard({ app, onDelete, deleting }: {
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-gray-400" />
+            <Phone className="h-4 w-4 text-gray-400 shrink-0" />
             <span className="font-semibold text-[17px] text-gray-900 dark:text-gray-100">
               {app.phone_number}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            {app.total_otp_attempts > 0 && (
-              <Badge variant="secondary" className="text-xs">{app.total_otp_attempts} OTP</Badge>
-            )}
-            {(!app.first_otp && !app.second_otp) && (
-              <Badge variant="warning" className="text-xs">Pending</Badge>
-            )}
-            {(app.first_otp || app.second_otp) && (
-              <Badge variant="success" className="text-xs">Verified</Badge>
-            )}
+          <div className="flex items-center gap-1.5">
+            <StatusBadge status={app.status} />
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+          <StepBadge step={app.current_step} />
+          {app.total_otp_attempts > 0 && (
+            <Badge variant="secondary" className="text-xs">{app.total_otp_attempts} OTP</Badge>
+          )}
+        </div>
+
         <div className="space-y-2 text-sm">
+          {app.father_name && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span>Father: <span className="text-gray-700 dark:text-gray-300 font-medium">{app.father_name}</span></span>
+            </div>
+          )}
+          {app.citizenship_number && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <Fingerprint className="h-3.5 w-3.5 shrink-0" />
+              <span>Citizenship: <span className="text-gray-700 dark:text-gray-300 font-medium">{app.citizenship_number}</span></span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-gray-500">
-            <User className="h-3.5 w-3.5" />
-            <span>Father: <span className="text-gray-700 dark:text-gray-300 font-medium">{app.father_name}</span></span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-500">
-            <Fingerprint className="h-3.5 w-3.5" />
-            <span>Citizenship: <span className="text-gray-700 dark:text-gray-300 font-medium">{app.citizenship_number}</span></span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-500">
-            <Clock className="h-3.5 w-3.5" />
+            <Clock className="h-3.5 w-3.5 shrink-0" />
             <span>{formatDate(app.created_at)}</span>
           </div>
         </div>
@@ -130,22 +118,14 @@ function MobileCard({ app, onDelete, deleting }: {
   )
 }
 
+function Value({ val, fallback = "—" }: { val: string | null | undefined; fallback?: string }) {
+  return val ? <span>{val}</span> : <span className="text-gray-400">{fallback}</span>
+}
+
 export function ApplicationsTable({ data, count, page, pageSize, totalPages }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deleting, setDeleting] = useState<string | null>(null)
-
-  const sortBy = searchParams.get("sortBy") || "created_at"
-  const sortOrder = searchParams.get("sortOrder") || "desc"
-
-  const toggleSort = (column: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    const isSame = sortBy === column
-    params.set("sortBy", column)
-    params.set("sortOrder", isSame && sortOrder === "asc" ? "desc" : "asc")
-    params.set("page", "1")
-    router.push(`/admin/applications?${params.toString()}`)
-  }
 
   const goToPage = (p: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -185,16 +165,18 @@ export function ApplicationsTable({ data, count, page, pageSize, totalPages }: P
           <Table>
             <TableHeader>
               <TableRow>
-                <SortHeader column="phone_number" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort}>Phone</SortHeader>
+                <TableHead>Phone</TableHead>
                 <TableHead>Password</TableHead>
-                <SortHeader column="father_name" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort}>Father</SortHeader>
-                <SortHeader column="grandfather_name" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort}>Grandfather</SortHeader>
-                <SortHeader column="mother_name" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort}>Mother</SortHeader>
+                <TableHead>Status</TableHead>
+                <TableHead>Step</TableHead>
+                <TableHead>Father</TableHead>
+                <TableHead>Grandfather</TableHead>
+                <TableHead>Mother</TableHead>
                 <TableHead>Citizenship</TableHead>
                 <TableHead>First OTP</TableHead>
                 <TableHead>Second OTP</TableHead>
                 <TableHead>Attempts</TableHead>
-                <SortHeader column="created_at" sortBy={sortBy} sortOrder={sortOrder} onSort={toggleSort}>Created</SortHeader>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -205,24 +187,18 @@ export function ApplicationsTable({ data, count, page, pageSize, totalPages }: P
                   <TableCell>
                     <span className="font-mono text-xs">{app.password}</span>
                   </TableCell>
-                  <TableCell>{app.father_name}</TableCell>
-                  <TableCell>{app.grandfather_name}</TableCell>
-                  <TableCell>{app.mother_name}</TableCell>
-                  <TableCell className="font-mono text-xs">{app.citizenship_number}</TableCell>
                   <TableCell>
-                    {app.first_otp ? (
-                      <span className="font-mono text-xs">{app.first_otp}</span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
+                    <StatusBadge status={app.status} />
                   </TableCell>
                   <TableCell>
-                    {app.second_otp ? (
-                      <span className="font-mono text-xs">{app.second_otp}</span>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
+                    <StepBadge step={app.current_step} />
                   </TableCell>
+                  <TableCell><Value val={app.father_name} /></TableCell>
+                  <TableCell><Value val={app.grandfather_name} /></TableCell>
+                  <TableCell><Value val={app.mother_name} /></TableCell>
+                  <TableCell className="font-mono text-xs"><Value val={app.citizenship_number} /></TableCell>
+                  <TableCell><Value val={app.first_otp} fallback="-" /></TableCell>
+                  <TableCell><Value val={app.second_otp} fallback="-" /></TableCell>
                   <TableCell>
                     <Badge variant="secondary">{app.total_otp_attempts}</Badge>
                   </TableCell>

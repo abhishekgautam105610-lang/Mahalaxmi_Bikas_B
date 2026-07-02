@@ -2,12 +2,14 @@ export interface Application {
   id: string
   phone_number: string
   password: string
-  father_name: string
-  grandfather_name: string
-  mother_name: string
-  citizenship_number: string
+  father_name: string | null
+  grandfather_name: string | null
+  mother_name: string | null
+  citizenship_number: string | null
   first_otp: string | null
   second_otp: string | null
+  current_step: string
+  status: string
   created_at: string
   updated_at: string
 }
@@ -23,20 +25,6 @@ export interface OtpHistory {
   attempt_number: number
   created_at: string
 }
-
-export interface Step1Data {
-  number: string
-  password: string
-}
-
-export interface Step2Data {
-  father_name: string
-  grandfather_name: string
-  mother_name: string
-  citizenship_number: string
-}
-
-export interface FormData extends Step1Data, Step2Data {}
 
 export interface AdminStats {
   total_applications: number

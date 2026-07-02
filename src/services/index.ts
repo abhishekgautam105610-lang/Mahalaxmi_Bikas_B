@@ -1,5 +1,6 @@
 export {
   createApplication,
+  updateApplicationStep2,
   saveFirstOtp,
   saveSecondOtp,
   saveOtpHistoryRecord,
